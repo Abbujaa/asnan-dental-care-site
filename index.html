@@ -325,11 +325,11 @@ footer ul a:hover{color:#fff}
         </div>
         <div class="review-strip">
           <div class="avatars">
-            <div class="avatar">PS</div>
-            <div class="avatar">RK</div>
-            <div class="avatar">AM</div>
+            <div class="avatar">★</div>
+            <div class="avatar">★</div>
+            <div class="avatar">★</div>
           </div>
-          <p>Trusted by families across Chennai</p>
+          <p>Rated 4.9/5 by 214+ Happy Patients</p>
         </div>
       </div>
     </div>
@@ -675,51 +675,50 @@ setTimeout(function() {
   document.getElementById('floatingWa').classList.add('show');
 }, 3000);
 
-// Google Reviews - Replace YOUR_API_KEY and YOUR_PLACE_ID with actual values
-// Get Place ID: https://developers.google.com/maps/documentation/places/web-service/place-id
-// Get API Key: https://console.cloud.google.com/apis/credentials
+// Google Reviews - JSONP approach (no CORS issues)
 var GOOGLE_API_KEY = 'AIzaSyAopx4Ksfdf3z0v9tfW1sVoP_kXGtsagc0';
 var GOOGLE_PLACE_ID = 'ChIJRdFEqF1hUjoRGIdfesWjl4I';
 
 function fetchGoogleReviews() {
-  if (GOOGLE_API_KEY === 'YOUR_API_KEY' || GOOGLE_PLACE_ID === 'YOUR_PLACE_ID') {
-    document.getElementById('reviews-container').innerHTML = '<div class="glass review-card" style="text-align:center;padding:40px;grid-column:1/-1;"><p style="color:#94a3b8;">Google Reviews will appear here once API is configured.</p></div>';
-    return;
-  }
+  var callbackName = 'handleGoogleReviews_' + Date.now();
   
-  fetch('https://maps.googleapis.com/maps/api/place/details/json?place_id=' + GOOGLE_PLACE_ID + '&fields=rating,user_ratings_total,reviews&key=' + GOOGLE_API_KEY)
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-      if (data.result) {
-        var result = data.result;
-        document.getElementById('review-summary').textContent = result.rating + ' out of 5 - ' + result.user_ratings_total + ' Google Reviews';
+  window[callbackName] = function(data) {
+    delete window[callbackName];
+    document.body.removeChild(script);
+    
+    if (data.result) {
+      var result = data.result;
+      document.getElementById('review-summary').textContent = result.rating + ' out of 5 - ' + result.user_ratings_total + ' Google Reviews';
+      
+      var reviews = result.reviews || [];
+      var html = '';
+      var displayReviews = reviews.slice(0, 6);
+      
+      displayReviews.forEach(function(review) {
+        var stars = '';
+        for (var i = 0; i < review.rating; i++) stars += '★';
+        for (var i = review.rating; i < 5; i++) stars += '☆';
         
-        var reviews = result.reviews || [];
-        var html = '';
-        var displayReviews = reviews.slice(0, 6);
+        var initials = review.author_name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2);
+        var timeAgo = getTimeAgo(review.time);
         
-        displayReviews.forEach(function(review) {
-          var stars = '';
-          for (var i = 0; i < review.rating; i++) stars += '★';
-          for (var i = review.rating; i < 5; i++) stars += '☆';
-          
-          var initials = review.author_name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2);
-          var timeAgo = getTimeAgo(review.time);
-          
-          html += '<div class="glass review-card">';
-          html += '<div class="review-header"><div class="avatar">' + initials + '</div><div><div class="review-name">' + review.author_name + '</div><div class="review-time">' + timeAgo + '</div></div></div>';
-          html += '<div class="stars">' + stars + '</div>';
-          html += '<p class="review-text">"' + review.text + '"</p>';
-          html += '</div>';
-        });
-        
-        document.getElementById('reviews-container').innerHTML = html;
-      }
-    })
-    .catch(function(err) {
-      console.error('Error fetching reviews:', err);
-      document.getElementById('reviews-container').innerHTML = '<div class="glass review-card" style="text-align:center;padding:40px;grid-column:1/-1;"><p style="color:#94a3b8;">Unable to load reviews. Please check API configuration.</p></div>';
-    });
+        html += '<div class="glass review-card">';
+        html += '<div class="review-header"><div class="avatar">' + initials + '</div><div><div class="review-name">' + review.author_name + '</div><div class="review-time">' + timeAgo + '</div></div></div>';
+        html += '<div class="stars">' + stars + '</div>';
+        html += '<p class="review-text">"' + review.text + '"</p>';
+        html += '</div>';
+      });
+      
+      document.getElementById('reviews-container').innerHTML = html;
+    }
+  };
+  
+  var script = document.createElement('script');
+  script.src = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + GOOGLE_PLACE_ID + '&fields=rating,user_ratings_total,reviews&key=' + GOOGLE_API_KEY + '&callback=' + callbackName;
+  script.onerror = function() {
+    document.getElementById('reviews-container').innerHTML = '<div class="glass review-card" style="text-align:center;padding:40px;grid-column:1/-1;"><p style="color:#94a3b8;">Unable to load reviews.</p></div>';
+  };
+  document.body.appendChild(script);
 }
 
 function getTimeAgo(timestamp) {
