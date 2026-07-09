@@ -104,8 +104,12 @@ nav .container{display:flex;align-items:center;justify-content:space-between}
 .hero-stats-card{padding:28px;position:relative}
 .hero-stats-card .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)}
 .hero-stats-card .card-header .title{font-size:14px;font-weight:600;color:#f0f4f8}
-.hero-stats-card .card-header .status{display:flex;align-items:center;gap:6px;font-size:12px;color:#4ade80}
-.hero-stats-card .card-header .status .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse-dot 2s infinite}
+.hero-stats-card .card-header .status{display:flex;align-items:center;gap:6px;font-size:12px}
+.hero-stats-card .card-header .status.open{color:#4ade80}
+.hero-stats-card .card-header .status.closed{color:#f87171}
+.hero-stats-card .card-header .status .dot{width:8px;height:8px;border-radius:50%}
+.hero-stats-card .card-header .status.open .dot{background:#4ade80;animation:pulse-dot 2s infinite}
+.hero-stats-card .card-header .status.closed .dot{background:#f87171}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
 .stat-tile{text-align:center;padding:16px;background:rgba(255,255,255,0.03);border-radius:12px}
@@ -312,7 +316,7 @@ footer ul a:hover{color:#fff}
       <div class="glass hero-stats-card">
         <div class="card-header">
           <span class="title">Asnan Dental Care - Live Stats</span>
-          <span class="status"><span class="dot"></span> Open Now</span>
+          <span class="status" id="clinicStatus"><span class="dot"></span> <span id="statusText">Checking...</span></span>
         </div>
         <div class="stats-grid">
           <div class="stat-tile"><div class="number stat-star" id="stat-rating">4.9</div><div class="label">Google Rating</div></div>
@@ -666,6 +670,37 @@ function toggleFaq(btn) {
     btn.classList.add('open');
   }
 }
+
+// Live clinic open/closed status
+function updateClinicStatus() {
+  var now = new Date();
+  var day = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  var hours = now.getHours();
+  var mins = now.getMinutes();
+  var time = hours * 60 + mins;
+
+  var isOpen = false;
+
+  if (day === 0) {
+    // Sunday: 10:30-13:30, 17:30-20:30
+    if ((time >= 630 && time <= 810) || (time >= 1050 && time <= 1230)) isOpen = true;
+  } else {
+    // Mon-Sat: 10:00-13:30, 17:00-21:30
+    if ((time >= 600 && time <= 810) || (time >= 1020 && time <= 1290)) isOpen = true;
+  }
+
+  var el = document.getElementById('clinicStatus');
+  var txt = document.getElementById('statusText');
+  if (isOpen) {
+    el.className = 'status open';
+    txt.textContent = 'Open Now';
+  } else {
+    el.className = 'status closed';
+    txt.textContent = 'Closed Now';
+  }
+}
+updateClinicStatus();
+setInterval(updateClinicStatus, 60000);
 
 // Floating WhatsApp appears after 3s
 setTimeout(function() {
