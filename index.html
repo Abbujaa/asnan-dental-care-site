@@ -292,7 +292,7 @@ footer ul a:hover{color:#fff}
 <section id="home" class="hero">
   <div class="container">
     <div class="animate">
-      <div class="hero-badge"><span>★</span> 4.9 on Google - 214 Reviews</div>
+      <div class="hero-badge" id="hero-rating"><span>★</span> 4.9 on Google - 214 Reviews</div>
       <h1>Chennai's Most Trusted Dental Clinic</h1>
       <p>Pain-free dentistry led by Dr. Nawazuddin B.D.S. Root canal, implants, braces, whitening and more - open 7 days a week in Gerugambakkam.</p>
       <div class="hero-ctas">
@@ -330,7 +330,7 @@ footer ul a:hover{color:#fff}
             <div class="avatar">★</div>
             <div class="avatar">★</div>
           </div>
-          <p>Rated 4.9/5 by 214+ Happy Patients</p>
+          <p id="stats-rating-text">Rated 4.9/5 by 214+ Happy Patients</p>
         </div>
       </div>
     </div>
@@ -465,7 +465,7 @@ footer ul a:hover{color:#fff}
       </div>
     </div>
     <div class="review-cta animate">
-      <a href="https://search.google.com/local/writereview?placeid=ChIJRdFEqGFhUjoRGIdfWsWjl4I" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Write a Review on Google &rarr;</a>
+      <a href="https://search.google.com/local/writereview?placeid=ChIJRdFEqF1hUjoRGIdfesWjl4I" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Write a Review on Google &rarr;</a>
     </div>
   </div>
 </section><!-- WhatsApp Booking Section -->
@@ -719,6 +719,8 @@ function fetchGoogleReviews() {
       if (data.result) {
         var result = data.result;
         document.getElementById('review-summary').textContent = result.rating + ' out of 5 - ' + result.user_ratings_total + ' Google Reviews';
+        document.getElementById('hero-rating').innerHTML = '<span>★</span> ' + result.rating + ' on Google - ' + result.user_ratings_total + ' Reviews';
+        document.getElementById('stats-rating-text').textContent = 'Rated ' + result.rating + '/5 by ' + result.user_ratings_total + '+ Happy Patients';
         
         var reviews = result.reviews || [];
         var html = '';
