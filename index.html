@@ -671,32 +671,70 @@ function toggleFaq(btn) {
   }
 }
 
-// Live clinic open/closed status
+// Live clinic open/closed status (clinic in Chennai, IST UTC+5:30)
 function updateClinicStatus() {
   var now = new Date();
-  var day = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  var hours = now.getHours();
-  var mins = now.getMinutes();
+  var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  var ist = new Date(utc + 330 * 60000);
+  var day = ist.getDay();
+  var hours = ist.getHours();
+  var mins = ist.getMinutes();
   var time = hours * 60 + mins;
 
-  var isOpen = false;
+  var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-  if (day === 0) {
-    // Sunday: 10:30-13:30, 17:30-20:30
-    if ((time >= 630 && time <= 810) || (time >= 1050 && time <= 1230)) isOpen = true;
+  function getSlots(d) {
+    if (d === 0) return [[630,810],[1050,1230]];
+    return [[600,810],[1020,1290]];
+  }
+
+  function fmt(t) {
+    var h = Math.floor(t / 60);
+    var m = t % 60;
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+  }
+
+  var slots = getSlots(day);
+  var isOpen = false;
+  var statusText = '';
+
+  for (var i = 0; i < slots.length; i++) {
+    if (time >= slots[i][0] && time < slots[i][1]) { isOpen = true; break; }
+  }
+
+  if (isOpen) {
+    statusText = 'Open Now';
   } else {
-    // Mon-Sat: 10:00-13:30, 17:00-21:30
-    if ((time >= 600 && time <= 810) || (time >= 1020 && time <= 1290)) isOpen = true;
+    var nextSlot = null;
+    for (var i = 0; i < slots.length; i++) {
+      if (time < slots[i][0]) { nextSlot = slots[i][0]; break; }
+    }
+    if (nextSlot) {
+      statusText = 'Closed \u2014 Opens at ' + fmt(nextSlot);
+    } else {
+      var nextDay = (day + 1) % 7;
+      var found = nextDay;
+      while (true) {
+        var s = getSlots(found);
+        if (s.length > 0) { nextSlot = s[0][0]; break; }
+        found = (found + 1) % 7;
+      }
+      var prefix = found === nextDay ? 'tomorrow' : dayNames[found];
+      statusText = 'Closed \u2014 Opens ' + prefix + ' at ' + fmt(nextSlot);
+    }
   }
 
   var el = document.getElementById('clinicStatus');
   var txt = document.getElementById('statusText');
   if (isOpen) {
     el.className = 'status open';
-    txt.textContent = 'Open Now';
+    txt.textContent = statusText;
   } else {
     el.className = 'status closed';
-    txt.textContent = 'Closed Now';
+    txt.textContent = statusText;
   }
 }
 updateClinicStatus();
